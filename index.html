@@ -14,7 +14,7 @@
   <div id="app">
     <h1>Let's See What You Have To Do</h1>
     <section class="todo-wrapper">
-      <h2 class="todo-title">{{ today.day }}<br>{{ today.date }}</h2>
+      <h2 class="todo-title">{{ today.day }}  ({{ today.date }})</h2>
       <form @keydown.enter.prevent="">
         <input type="text" class="input-todo" v-bind:class="{ active: new_todo }" placeholder="What to do" v-model="new_todo" v-on:keyup.enter="addItem">
         <div class="btn btn-add" v-bind:class="{ active: new_todo }"  @click="addItem">+</div>
