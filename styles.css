@@ -303,3 +303,7 @@ ul.todo-list li:hover .delete:after{
   transform: scale(1.1);
   opacity: 0;
 }
+footer{
+  text-align: center;
+  align-items: center;
+}
