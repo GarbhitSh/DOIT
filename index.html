@@ -1,64 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Doit </title>    
-  <meta name="viewport" content="width=device-width" />
-  <link rel="icon" href="images/favicon.png" sizes="32x32">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doit</title>
   <link rel="stylesheet" type="text/css" href="./styles.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,100,700,100italic,300italic,400italic">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
-
+  <!-- Firebase App (the core Firebase SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <!-- Firebase Authentication -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <!-- Firebase Firestore -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
-
 <body>
   <div id="app">
     <h1>Let's See What You Have To Do</h1>
-    <section class="todo-wrapper">
-      <h2 class="todo-title">{{ today.day }}  ({{ today.date }})</h2>
-      <form @keydown.enter.prevent="">
-        <input type="text" class="input-todo" v-bind:class="{ active: new_todo }" placeholder="What to do" v-model="new_todo" v-on:keyup.enter="addItem">
-        <div class="btn btn-add" v-bind:class="{ active: new_todo }"  @click="addItem">+</div>
-      </form>
-
-      <div v-if="pending.length > 0">
-        <p class="status busy">You have {{ pending.length }} pending item<span v-if="pending.length>1">s</span></p>
-        <transition-group name="todo-item" tag="ul" class="todo-list">
-          <li v-for="(item, index) in pending" v-bind:key="item.title">
-            <input class="todo-checkbox" v-bind:id="'item_' + item.id" v-model="item.done" type="checkbox">
-            <label v-bind:for="'item_' + item.id"></label>
-            <span class="todo-text">{{ item.title }}</span>
-            <span class="delete" @click="deleteItem(item)"></span>
-          </li>
-        </transition>  
-      </div> 
-
-      <transition name="slide-fade">
-        <p class="status free" v-if="!pending.length" ><img src="images/done.png" alt="celebration">Time to chill!  You have no todos.</p> 
-      </transition> 
-
-      <div v-if="completed.length > 0 && showComplete">
-        <p class="status">Completed tasks: {{ completedPercentage }}</p>
-        <transition-group name="todo-item" tag="ul" class="todo-list archived">
-          <li v-for="(item, index) in completed" v-bind:key="item.title">
-            <input class="todo-checkbox" v-bind:id="'item_' + item.id" v-model="item.done" type="checkbox">
-            <label v-bind:for="'item_' + item.id"></label>
-            <span class="todo-text">{{ item.title }}</span>
-            <span class="delete" @click="deleteItem(item)"></span>
-          </li>
-        </transition>  
+    <div v-if="user">
+      <div class="logout-container">
+        <button class="logout-btn" @click="signOut">Sign Out</button>
       </div>
-      <div class="control-buttons">
-        <div class="btn btn-secondary" v-if="completed.length > 0" @click="toggleShowComplete"><span v-if="!showComplete">Show</span><span v-else>Hide</span> Complete</div>
-        <div class="btn btn-secondary" v-if="todoList.length > 0" @click="clearAll">Clear All</div>
+      <section class="todo-wrapper">
+        <h2 class="todo-title">{{ today.day }} ({{ today.date }})</h2>
+        <form @keydown.enter.prevent="">
+          <input type="text" class="input-todo" v-bind:class="{ active: new_todo }" placeholder="What to do" v-model="new_todo" v-on:keyup.enter="addItem">
+          <div class="btn btn-add" v-bind:class="{ active: new_todo }" @click="addItem">+</div>
+        </form>
+
+        <div v-if="pending.length > 0">
+          <p class="status busy">You have {{ pending.length }} pending item<span v-if="pending.length>1">s</span></p>
+          <transition-group name="todo-item" tag="ul" class="todo-list">
+            <li v-for="(item, index) in pending" v-bind:key="item.title">
+              <input class="todo-checkbox" v-bind:id="'item_' + item.id" v-model="item.done" type="checkbox">
+              <label v-bind:for="'item_' + item.id"></label>
+              <span class="todo-text">{{ item.title }}</span>
+              <span class="delete" @click="deleteItem(item)"></span>
+            </li>
+          </transition-group>
+        </div> 
+
+        <transition name="slide-fade">
+          <p class="status free" v-if="!pending.length"><img src="images/done.png" alt="celebration">Time to chill! You have no todos.</p> 
+        </transition> 
+
+        <div v-if="completed.length > 0 && showComplete">
+          <p class="status">Completed tasks: {{ completedPercentage }}</p>
+          <transition-group name="todo-item" tag="ul" class="todo-list archived">
+            <li v-for="(item, index) in completed" v-bind:key="item.title">
+              <input class="todo-checkbox" v-bind:id="'item_' + item.id" v-model="item.done" type="checkbox">
+              <label v-bind:for="'item_' + item.id"></label>
+              <span class="todo-text">{{ item.title }}</span>
+              <span class="delete" @click="deleteItem(item)"></span>
+            </li>
+          </transition-group>
+        </div>
+        <div class="control-buttons">
+          <div class="btn btn-secondary" v-if="completed.length > 0" @click="toggleShowComplete"><span v-if="!showComplete">Show</span><span v-else>Hide</span> Complete</div>
+          <div class="btn btn-secondary" v-if="todoList.length > 0" @click="clearAll">Clear All</div>
+        </div>
+      </section>
+ 
+    </div>
+    <div v-else>
+      <div class="login-container">
+        <h2>Please sign in to manage your tasks</h2>
+        <button class="login-btn" @click="signInWithGoogle">Sign In with Google</button>
       </div>
-    </section>
-  </div>
-  
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <script src="script.js"></script>
+    </div>
+
+  <script src="app.js"></script>
 </body>
-<footer>
-  <p>Made with ❤️ <a href="https://linkedin.com/in/garbhit-sharma-46a699249"></a></p>
-
-</footer>
 </html>
